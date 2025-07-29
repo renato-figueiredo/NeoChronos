@@ -131,3 +131,115 @@ body {
     align-items: center;
     gap: 10px;
 }
+
+.datetime-display {
+    text-align: center;
+    margin-bottom: 24px;
+    font-family: var(--font-primary);
+}
+
+#date-display {
+    font-size: 1rem;
+    font-weight: 400;
+    color: var(--text-color);
+    opacity: 0.8;
+}
+
+#time-display {
+    font-size: 2.2rem;
+    font-weight: 600;
+    font-family: var(--font-mono);
+    letter-spacing: 1px;
+}
+
+.task-controls button {
+    font-size: 1rem; /* Para os ícones ficarem maiores */
+}
+
+/* Estilos dos Modais */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: var(--bg-color);
+    padding: 24px;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    width: 90%;
+    max-width: 340px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.modal-content h4 {
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* Ajuste para botões com ícones */
+.neumorphic-button-outset i {
+    font-size: 1.2rem;
+    vertical-align: middle;
+}
+
+.add-task-form button i {
+    font-size: 1.4rem;
+}
+
+/* Novo Layout do Card de Tarefa */
+.task-card {
+    flex-direction: column;
+    align-items: stretch; /* Faz os filhos ocuparem a largura total */
+    gap: 12px;
+}
+
+.task-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.task-card-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.task-name {
+    font-size: 1rem;
+    font-weight: 500;
+    word-break: break-word; /* Quebra palavras longas */
+}
+
+/* Novo layout para entrada manual de tempo */
+.manual-time-inputs {
+    display: flex;
+    gap: 10px;
+}
+.manual-time-inputs input {
+    width: 50%;
+}
