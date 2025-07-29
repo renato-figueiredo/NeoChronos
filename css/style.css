@@ -1,0 +1,133 @@
+:root {
+    --bg-color: #E0E5EC;
+    --primary-color: #FF6B6B; /* Vermelho Pastel */
+    --text-color: #3D3D3D;
+    --font-primary: 'Poppins', sans-serif;
+    --font-mono: 'Roboto Mono', monospace;
+    --shadow-dark: #a3b1c6;
+    --shadow-light: #ffffff;
+}
+
+/* Para um futuro tema escuro (pode ser ativado com JS ou prefers-color-scheme) */
+/*
+body.dark-theme {
+    --bg-color: #2C2C2C;
+    --primary-color: #E84A5F;
+    --text-color: #EAEAEA;
+    --shadow-dark: #1a1a1a;
+    --shadow-light: #383838;
+}
+*/
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: var(--font-primary);
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    width: 380px; /* Largura padrão para popups do chrome */
+    padding: 16px;
+}
+
+.card {
+    background-color: var(--bg-color);
+    border-radius: 15px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: 6px 6px 12px var(--shadow-dark), -6px -6px 12px var(--shadow-light);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.card-header h2, .card-header h3 {
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.timer-display {
+    font-family: var(--font-mono);
+    font-size: 2.5rem;
+    font-weight: 700;
+    text-align: center;
+    letter-spacing: 2px;
+}
+
+#main-timer-display {
+    color: var(--text-color);
+}
+
+.task-timer {
+    font-size: 1.2rem;
+    font-weight: 500;
+}
+
+.neumorphic-button-outset {
+    border: none;
+    outline: none;
+    background-color: var(--bg-color);
+    padding: 10px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-family: var(--font-primary);
+    font-weight: 600;
+    color: var(--text-color);
+    box-shadow: 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light);
+    transition: all 0.2s ease-in-out;
+}
+
+.neumorphic-button-outset:active {
+    box-shadow: inset 4px 4px 8px var(--shadow-dark), inset -4px -4px 8px var(--shadow-light);
+}
+
+.neumorphic-button-outset.primary-action {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.neumorphic-input {
+    flex-grow: 1;
+    border: none;
+    outline: none;
+    padding: 12px;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    background-color: var(--bg-color);
+    font-family: var(--font-primary);
+    box-shadow: inset 4px 4px 8px var(--shadow-dark), inset -4px -4px 8px var(--shadow-light);
+}
+
+.add-task-form {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.task-list {
+    list-style: none;
+}
+
+.task-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+}
+
+.task-name {
+    font-size: 1rem;
+}
+
+.task-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}

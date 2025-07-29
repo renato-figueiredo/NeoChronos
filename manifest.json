@@ -1,0 +1,12 @@
+{
+  "manifest_version": 3,
+  "name": "NeoChronos - Focus Timer",
+  "version": "1.0",
+  "description": "Gerencie seu dia de trabalho e tarefas com um cronômetro neomórfico.",
+  "permissions": [
+    "storage"
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  }
+}

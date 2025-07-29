@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeoChronos</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=Roboto+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="card main-timer-card">
+            <div class="card-header">
+                <h2>Dia de Trabalho</h2>
+                <button id="main-toggle" class="neumorphic-button-outset">▶</button>
+            </div>
+            <div id="main-timer-display" class="timer-display">00:00:00</div>
+        </div>
+
+        <div class="tasks-section">
+            <div class="card-header">
+                <h3>Tarefas</h3>
+            </div>
+            <div class="add-task-form">
+                <input type="text" id="new-task-name" class="neumorphic-input" placeholder="Nome da nova tarefa...">
+                <button id="add-task-btn" class="neumorphic-button-outset primary-action">+</button>
+            </div>
+            
+            <ul id="task-list" class="task-list">
+                </ul>
+        </div>
+    </div>
+
+    <script src="js/popup.js"></script>
+</body>
+</html>

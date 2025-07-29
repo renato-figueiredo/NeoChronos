@@ -1,0 +1,13 @@
+# Arquivo de configuração local com chaves secretas
+js/config.js
+
+# Dependências do Node.js
+node_modules/
+
+# Arquivos de sistema operacional
+.DS_Store
+Thumbs.db
+
+# Arquivos de build
+dist/
+build/
