@@ -1,0 +1,127 @@
+<div class="container">
+
+    <div class="datetime-display">
+        <div>{{ currentDate }}</div>
+        <div>{{ currentTime }}</div>
+    </div>
+
+    <div class="card main-timer-card">
+        <div class="card-header">
+            <h2>Dia de Trabalho</h2>
+            <button @click="timerStore.toggleMainTimer" class="neumorphic-button-outset">
+                <i class="bi" :class="timerStore.mainTimer.isRunning ? 'bi-pause-fill' : 'bi-play-fill'"></i>
+            </button>
+        </div>
+        <div @click="handleSetTimeClick" class="timer-display" style="cursor: pointer;"
+            title="Definir horário de início">
+            {{ timerStore.formattedMainTime }}
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3>Tempo em Tarefas</h3>
+        </div>
+        <div class="timer-display" style="font-size: 2rem;">{{ timerStore.formattedCompletedTasksTotal }}</div>
+    </div>
+
+    <div class="tasks-section">
+        <div class="card-header">
+            <h3>Tarefas</h3>
+            <button @click="showManualTaskModal = true" title="Adicionar tarefa já concluída"
+                class="neumorphic-button-outset">
+                <i class="bi bi-pencil-square"></i>
+            </button>
+        </div>
+        <div class="add-task-form">
+            <input v-model="newTaskName" @keyup.enter="handleAddTask" type="text" class="neumorphic-input"
+                placeholder="Nome da nova tarefa...">
+            <button @click="handleAddTask" title="Iniciar nova tarefa" class="neumorphic-button-outset primary-action">
+                <i class="bi bi-plus-lg"></i>
+            </button>
+        </div>
+
+        <ul class="task-list">
+            <li v-if="timerStore.tasks.length === 0" class="empty-state">Nenhuma tarefa ainda. Adicione uma!</li>
+
+            <li v-for="task in timerStore.todaysTasks" :key="task.id" class="card task-card"
+                :class="{ completed: task.status === 'completed' }">
+                <div class="task-card-top">
+                    <span class="task-name">{{ task.name }}</span>
+                    <button @click="timerStore.deleteTask(task.id)" class="neumorphic-button-outset task-delete"
+                        title="Excluir Tarefa">
+                        <i class="bi bi-trash3-fill"></i>
+                    </button>
+                </div>
+                <div class="task-creation-date">{{ formatCreationDate(task.createdAt) }}</div>
+                <div class="task-card-bottom">
+                    <span class="timer-display task-timer">{{ formatTime(task.elapsedTime) }}</span>
+                    <div class="task-controls">
+                        <button v-if="task.status !== 'completed'" @click="timerStore.toggleTask(task.id)"
+                            class="neumorphic-button-outset task-toggle" title="Iniciar/Pausar">
+                            <i class="bi"
+                                :class="task.status === 'running' ? 'bi-pause-circle-fill' : 'bi-play-circle-fill'"></i>
+                        </button>
+                        <button v-if="task.status !== 'completed'" @click="handleEditTask(task)"
+                            class="neumorphic-button-outset task-edit" title="Editar Nome">
+                            <i class="bi bi-pencil-fill"></i>
+                        </button>
+                        <button v-if="task.status !== 'completed'" @click="timerStore.completeTask(task.id)"
+                            class="neumorphic-button-outset task-complete" title="Concluir Tarefa">
+                            <i class="bi bi-check-circle-fill"></i>
+                        </button>
+                    </div>
+                </div>
+            </li>
+        </ul>
+    </div>
+
+    <div v-if="showManualTaskModal" class="modal-overlay" @click.self="showManualTaskModal = false">
+        <div class="modal-content">
+            <h4>Adicionar Tarefa Manual</h4>
+
+            <div class="modal-switch">
+                <button class="neumorphic-button-outset switch-btn" :class="{ active: manualEntryMode === 'duration' }"
+                    @click="manualEntryMode = 'duration'">
+                    Duração
+                </button>
+                <button class="neumorphic-button-outset switch-btn" :class="{ active: manualEntryMode === 'period' }"
+                    @click="manualEntryMode = 'period'">
+                    Período
+                </button>
+            </div>
+
+            <input v-model="manualTask.name" type="text" class="neumorphic-input" placeholder="Nome da tarefa...">
+
+            <div v-if="manualEntryMode === 'duration'" class="manual-time-inputs">
+                <input v-model.number="manualTask.hours" type="number" class="neumorphic-input" placeholder="Horas"
+                    min="0">
+                <input v-model.number="manualTask.minutes" type="number" class="neumorphic-input" placeholder="Minutos"
+                    min="0" max="59">
+            </div>
+
+            <div v-if="manualEntryMode === 'period'" class="manual-time-inputs">
+                <input v-model="manualTask.startTime" type="time" class="neumorphic-input" placeholder="Início">
+                <input v-model="manualTask.endTime" type="time" class="neumorphic-input" placeholder="Fim">
+            </div>
+
+            <div class="modal-actions">
+                <button @click="showManualTaskModal = false" class="neumorphic-button-outset">Cancelar</button>
+                <button @click="handleManualTaskConfirm"
+                    class="neumorphic-button-outset primary-action">Adicionar</button>
+            </div>
+        </div>
+    </div>
+
+    <div v-if="showSetTimeModal" class="modal-overlay" @click.self="showSetTimeModal = false">
+        <div class="modal-content">
+            <h4>Definir Horário de Início</h4>
+            <p>Digite a hora que você começou a trabalhar (ex: 09:00).</p>
+            <input v-model="setTimeInputValue" id="manual-start-time-input" type="time" class="neumorphic-input">
+            <div class="modal-actions">
+                <button @click="showSetTimeModal = false" class="neumorphic-button-outset">Cancelar</button>
+                <button @click="handleSetTimeConfirm" class="neumorphic-button-outset primary-action">Confirmar</button>
+            </div>
+        </div>
+    </div>
+</div>

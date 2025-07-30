@@ -1,0 +1,75 @@
+/* src/App.styles.css */
+
+/* Estilos que tínhamos antes, que funcionam bem */
+.completed {
+    opacity: 0.6;
+    background-color: #d1d9e6;
+}
+.manual-time-inputs {
+    display: flex;
+    gap: 10px;
+}
+.manual-time-inputs input {
+    width: 50%;
+}
+
+/* NOVO: Garante que o container principal tenha a altura correta e permita o scroll */
+.container {
+  height: 550px; /* Altura fixa para o popup da extensão */
+  overflow-y: auto; /* Permite o scroll vertical quando o conteúdo ultrapassa a altura */
+}
+
+/* NOVO: Garante que o layout dos cards de tarefa volte ao normal */
+.task-card {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+}
+
+.task-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.task-card-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.task-name {
+    font-size: 1rem;
+    font-weight: 500;
+    word-break: break-word;
+}
+
+.task-creation-date {
+    font-size: 0.75rem;
+    color: var(--text-color);
+    opacity: 0.7;
+    align-self: flex-start;
+    margin-top: -8px;
+    margin-bottom: 8px;
+    padding: 0 4px;
+}
+
+.modal-switch {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+.switch-btn {
+    flex-grow: 1;
+    padding: 8px;
+    border: none;
+    font-weight: 500;
+}
+.switch-btn.active {
+    /* Efeito "pressionado" para o botão ativo */
+    box-shadow: inset 4px 4px 8px var(--shadow-dark), inset -4px -4px 8px var(--shadow-light);
+    color: var(--primary-color);
+}
