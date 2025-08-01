@@ -1,4 +1,3 @@
-// src/stores/timerStore.js
 import { defineStore } from 'pinia'
 
 const STORAGE_KEY = 'neoChronosState';
@@ -30,14 +29,9 @@ export const useTimerStore = defineStore('timer', {
     },
     todaysTasks: (state) => {
         const today = new Date();
-        today.setHours(0, 0, 0, 0); // Define a hora para o início do dia
-
+        today.setHours(0, 0, 0, 0);
         return state.tasks.filter(task => {
-            // Se a tarefa não está completa, mostre sempre
-            if (task.status !== 'completed') {
-                return true;
-            }
-            // Se está completa, mostre apenas se foi criada hoje
+            if (task.status !== 'completed') return true;
             return task.createdAt >= today.getTime();
         });
     }
@@ -61,54 +55,54 @@ export const useTimerStore = defineStore('timer', {
       this._intervalId = setInterval(() => this._tick(), 1000);
     },
 
-    // --- Ações do Timer Principal ---
     toggleMainTimer() {
         this.mainTimer.isRunning = !this.mainTimer.isRunning;
         if (this.mainTimer.isRunning) {
             this.mainTimer.startTime = Date.now() - (this.mainTimer.elapsedTime * 1000);
         }
     },
-
+    
     setMainTimerManually(hours, minutes) {
         const now = new Date();
         const startTime = new Date();
         startTime.setHours(Number(hours), Number(minutes), 0, 0);
-
-        if (startTime > now) {
-            alert("A hora de início não pode ser no futuro.");
-            return;
-        }
-        
+        if (startTime > now) return alert("A hora de início não pode ser no futuro.");
         const diffInSeconds = Math.floor((now - startTime) / 1000);
         this.mainTimer.elapsedTime = diffInSeconds;
-
         if(this.mainTimer.isRunning) {
             this.mainTimer.startTime = Date.now() - (this.mainTimer.elapsedTime * 1000);
         }
     },
 
-    // --- Ações das Tarefas ---
-    // (O resto das ações de tarefa continuam as mesmas da versão anterior)
     addTask(name) {
-        this.tasks.push({ 
-            id: Date.now(), 
-            name: name, 
-            status: 'paused', 
-            elapsedTime: 0, 
-            startTime: 0,
-            createdAt: Date.now(),
-        });
+        this.tasks.push({ id: Date.now(), name: name, status: 'paused', elapsedTime: 0, startTime: 0, createdAt: Date.now() });
     },
-    addManualTask({ name, totalSeconds }) {
-        if (!name || totalSeconds <= 0) return;
-        this.tasks.push({
-            id: Date.now(),
-            name: name,
-            status: 'completed',
-            elapsedTime: totalSeconds,
-            createdAt: Date.now(),
-        });
+
+    addManualTask({ entryMode, taskData }) {
+        let totalSeconds = 0;
+        if (entryMode === 'duration') {
+            const hours = taskData.hours || 0;
+            const minutes = taskData.minutes || 0;
+            totalSeconds = (hours * 3600) + (minutes * 60);
+        } else {
+            if (taskData.startTime && taskData.endTime) {
+                const start = new Date(`1970-01-01T${taskData.startTime}`);
+                const end = new Date(`1970-01-01T${taskData.endTime}`);
+                if (end > start) totalSeconds = (end - start) / 1000;
+            }
+        }
+
+        if (taskData.name && taskData.name.trim() && totalSeconds > 0) {
+            this.tasks.push({
+                id: Date.now(),
+                name: taskData.name,
+                status: 'completed',
+                elapsedTime: totalSeconds,
+                createdAt: Date.now(),
+            });
+        }
     },
+
     toggleTask(taskId) {
         const task = this.tasks.find(t => t.id === taskId);
         if (!task || task.status === 'completed') return;
@@ -117,9 +111,11 @@ export const useTimerStore = defineStore('timer', {
             task.startTime = Date.now() - (task.elapsedTime * 1000);
         }
     },
+    
     deleteTask(taskId) {
         this.tasks = this.tasks.filter(t => t.id !== taskId);
     },
+
     completeTask(taskId) {
         const task = this.tasks.find(t => t.id === taskId);
         if (task && task.status !== 'completed') {
@@ -127,53 +123,39 @@ export const useTimerStore = defineStore('timer', {
             task.status = 'completed';
         }
     },
-    updateTaskName(taskId, newName) {
-        const task = this.tasks.find(t => t.id === taskId);
-        if (task) task.name = newName;
+    
+    updateTaskName({ id, newName }) {
+        const task = this.tasks.find(t => t.id === id);
+        if (task) {
+            task.name = newName;
+        }
     },
 
-    // --- Ações de Persistência (CORRIGIDAS) ---
     saveState() {
       const stateToSave = { ...this.$state, _intervalId: null };
-      
-      // Verifica se a API do Chrome está disponível
-      if (window.chrome && chrome.storage && chrome.storage.local) {
-        chrome.storage.local.set({ [STORAGE_KEY]: stateToSave });
-      } else {
-        // Se não, usa o localStorage (para o ambiente de dev)
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
-      }
+      chrome.storage.local.set({ [STORAGE_KEY]: stateToSave });
     },
 
     loadState() {
-      // Verifica se a API do Chrome está disponível
-      if (window.chrome && chrome.storage && chrome.storage.local) {
-        chrome.storage.local.get(STORAGE_KEY, (result) => {
-          if (result[STORAGE_KEY]) {
-            this.processLoadedState(result[STORAGE_KEY]);
-          }
-        });
-      } else {
-        // Se não, usa o localStorage
-        const savedState = localStorage.getItem(STORAGE_KEY);
-        if (savedState) {
-          try {
-            this.processLoadedState(JSON.parse(savedState));
-          } catch (e) {
-            console.error("Erro ao carregar o estado do localStorage:", e);
-          }
+      chrome.storage.local.get(STORAGE_KEY, (result) => {
+        if (result[STORAGE_KEY]) {
+          this.processLoadedState(result[STORAGE_KEY]);
         }
-      }
+      });
     },
     
-    // Função auxiliar para processar o estado carregado
     processLoadedState(savedState) {
-        // Pausa todos os timers ao carregar para evitar contagem em background
-        savedState.mainTimer.isRunning = false;
-        savedState.tasks.forEach(t => {
-            if (t.status === 'running') t.status = 'paused';
-        });
-        this.$patch(savedState);
+
+        if (savedState && savedState.mainTimer && Array.isArray(savedState.tasks)) {
+            savedState.mainTimer.isRunning = false;
+            savedState.tasks.forEach(t => {
+                if (t.status === 'running') t.status = 'paused';
+            });
+            this.$patch(savedState);
+        } else {
+            console.warn("Estado salvo inválido ou corrompido. A começar com um estado limpo.");
+            chrome.storage.local.remove(STORAGE_KEY);
+        }
     }
   }
 })

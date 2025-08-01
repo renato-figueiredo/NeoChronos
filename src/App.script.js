@@ -1,16 +1,27 @@
-import { ref, onMounted } from 'vue'
-import { useTimerStore } from './stores/timerStore' // Corrigido: caminho relativo
+import { ref, onMounted, reactive } from 'vue'
 
 export default {
   setup() {
-    const timerStore = useTimerStore()
-    const setTimeInputValue = ref('') // Para guardar o valor do input 'hh:mm'
+    const timerStore = reactive({
+      mainTimer: { isRunning: false, elapsedTime: 0 },
+      tasks: [],
+      formattedMainTime: '00:00:00',
+      formattedCompletedTasksTotal: '00:00:00',
+      todaysTasks: [],
+    })
 
-    // Lógica do Relógio da UI
+    function request(action, payload = {}) {
+      if (window.chrome && chrome.runtime && chrome.runtime.sendMessage) {
+        chrome.runtime.sendMessage({ action, payload })
+      } else {
+        console.warn(`Modo de desenvolvimento: Ação '${action}' não foi enviada.`)
+      }
+    }
+
+    // --- Lógica do Relógio da UI ---
     const currentDate = ref('')
     const currentTime = ref('')
     let clockInterval = null
-
     const updateClock = () => {
       const now = new Date()
       const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }
@@ -18,12 +29,10 @@ export default {
       currentTime.value = now.toLocaleTimeString('pt-BR')
     }
 
-    // Lógica de Manipulação de Tarefas (UI)
     const newTaskName = ref('')
-
     function handleAddTask() {
       if (newTaskName.value.trim()) {
-        timerStore.addTask(newTaskName.value.trim())
+        request('addTask', { name: newTaskName.value.trim() })
         newTaskName.value = ''
       }
     }
@@ -31,67 +40,54 @@ export default {
     function handleEditTask(task) {
       const newName = prompt('Digite o novo nome da tarefa:', task.name)
       if (newName && newName.trim() !== '') {
-        timerStore.updateTaskName(task.id, newName.trim())
+        request('updateTaskName', { id: task.id, newName: newName.trim() })
       }
     }
 
-    // Lógica do Modal de Tarefa Manual
+    // NOVOS HANDLERS PARA CONSISTÊNCIA
+    function handleToggleTask(taskId) {
+      request('toggleTask', { id: taskId })
+    }
+    function handleDeleteTask(taskId) {
+      if (confirm('Tem a certeza de que deseja excluir esta tarefa?')) {
+        request('deleteTask', { id: taskId })
+      }
+    }
+    function handleCompleteTask(taskId) {
+      request('completeTask', { id: taskId })
+    }
+
     const showManualTaskModal = ref(false)
-    const manualTask = ref({
-      name: '',
-      hours: null,
-      minutes: null,
-      startTime: '',
-      endTime: '',
-    })
-    const manualEntryMode = ref('duration') // 'duration' ou 'period'
-
+    const manualTask = ref({ name: '', hours: null, minutes: null, startTime: '', endTime: '' })
+    const manualEntryMode = ref('duration')
     function handleManualTaskConfirm() {
-      let totalSeconds = 0
-      if (manualEntryMode.value === 'duration') {
-        const hours = manualTask.value.hours || 0
-        const minutes = manualTask.value.minutes || 0
-        totalSeconds = hours * 3600 + minutes * 60
-      } else {
-        if (manualTask.value.startTime && manualTask.value.endTime) {
-          const start = new Date(`1970-01-01T${manualTask.value.startTime}`)
-          const end = new Date(`1970-01-01T${manualTask.value.endTime}`)
-          if (end > start) {
-            totalSeconds = (end - start) / 1000
-          }
-        }
+      const payload = {
+        entryMode: manualEntryMode.value,
+        taskData: manualTask.value,
       }
-
-      if (manualTask.value.name.trim() && totalSeconds > 0) {
-        // A action agora recebe um objeto diferente
-        timerStore.addManualTask({
-          name: manualTask.value.name,
-          totalSeconds: totalSeconds,
-        })
-        // Reseta o formulário e fecha o modal
-        manualTask.value = { name: '', hours: null, minutes: null, startTime: '', endTime: '' }
-        showManualTaskModal.value = false
-      } else {
-        alert('Por favor, preencha o nome e um tempo válido.')
-      }
+      request('addManualTask', payload)
+      manualTask.value = { name: '', hours: null, minutes: null, startTime: '', endTime: '' }
+      showManualTaskModal.value = false
     }
 
-    // Lógica do Modal de Início do Dia
     const showSetTimeModal = ref(false)
-
+    const setTimeInputValue = ref('')
     function handleSetTimeClick() {
       showSetTimeModal.value = true
     }
-
     function handleSetTimeConfirm() {
-      if (!setTimeInputValue.value) return // Não faz nada se estiver vazio
+      if (!setTimeInputValue.value) return
       const [hours, minutes] = setTimeInputValue.value.split(':')
-      timerStore.setMainTimerManually(hours, minutes)
+      request('setMainTimerManually', { hours, minutes })
       showSetTimeModal.value = false
-      setTimeInputValue.value = '' // Limpa o valor para a próxima vez
+      setTimeInputValue.value = ''
     }
 
-    // Função auxiliar para o template
+    function handleToggleMainTimer() {
+      request('toggleMainTimer')
+    }
+
+    // Função auxiliar para formatar o tempo de segundos para HH:MM:SS
     function formatTime(seconds) {
       if (isNaN(seconds) || seconds < 0) seconds = 0
       const h = Math.floor(seconds / 3600)
@@ -100,12 +96,9 @@ export default {
       return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
     }
 
+    // Função auxiliar para formatar a data de criação da tarefa
     function formatCreationDate(timestamp) {
-      // Proteção para tarefas antigas que não têm data de criação
-      if (!timestamp) {
-        return '' // Retorna uma string vazia se não houver timestamp
-      }
-
+      if (!timestamp) return '' 
       const date = new Date(timestamp)
       const today = new Date()
       const yesterday = new Date(today)
@@ -117,16 +110,18 @@ export default {
       return date.toLocaleDateString('pt-BR')
     }
 
-    // Ciclo de Vida e Persistência
+    // --- Ciclo de Vida e Comunicação ---
     onMounted(() => {
       updateClock()
       clockInterval = setInterval(updateClock, 1000)
-      timerStore.initialize()
-
-      // Salva o estado a cada mudança
-      timerStore.$subscribe(() => {
-        timerStore.saveState()
-      })
+      if (window.chrome && chrome.runtime && chrome.runtime.onMessage) {
+        chrome.runtime.onMessage.addListener((message) => {
+          if (message.type === 'STATE_UPDATE' && message.state) {
+            Object.assign(timerStore, message.state)
+          }
+        })
+      }
+      request('GET_INITIAL_STATE')
     })
 
     return {
@@ -138,14 +133,18 @@ export default {
       handleEditTask,
       showManualTaskModal,
       manualTask,
+      manualEntryMode,
       handleManualTaskConfirm,
-      formatTime,
       showSetTimeModal,
+      setTimeInputValue,
       handleSetTimeClick,
       handleSetTimeConfirm,
-      manualEntryMode,
-      setTimeInputValue,
+      formatTime,
       formatCreationDate,
+      handleToggleTask,
+      handleDeleteTask,
+      handleCompleteTask,
+      handleToggleMainTimer,
     }
   },
 }
