@@ -9,6 +9,10 @@ export default {
       formattedCompletedTasksTotal: '00:00:00',
       todaysTasks: [],
     })
+    const authStore = reactive({
+      isLoggedIn: false,
+      user: null,
+    })
 
     function request(action, payload = {}) {
       if (window.chrome && chrome.runtime && chrome.runtime.sendMessage) {
@@ -29,6 +33,20 @@ export default {
       currentTime.value = now.toLocaleTimeString('pt-BR')
     }
 
+    // --- Handlers de Autenticação ---
+    const isProfileMenuOpen = ref(false)
+    function handleLogin() {
+      request('loginWithGoogle')
+    }
+    function handleLogout() {
+      request('logout')
+      isProfileMenuOpen.value = false // Fecha o menu
+    }
+    function toggleProfileMenu() {
+      isProfileMenuOpen.value = !isProfileMenuOpen.value
+    }
+
+    // --- Handlers das Tarefas ---
     const newTaskName = ref('')
     function handleAddTask() {
       if (newTaskName.value.trim()) {
@@ -44,7 +62,6 @@ export default {
       }
     }
 
-    // NOVOS HANDLERS PARA CONSISTÊNCIA
     function handleToggleTask(taskId) {
       request('toggleTask', { id: taskId })
     }
@@ -98,7 +115,7 @@ export default {
 
     // Função auxiliar para formatar a data de criação da tarefa
     function formatCreationDate(timestamp) {
-      if (!timestamp) return '' 
+      if (!timestamp) return ''
       const date = new Date(timestamp)
       const today = new Date()
       const yesterday = new Date(today)
@@ -114,37 +131,45 @@ export default {
     onMounted(() => {
       updateClock()
       clockInterval = setInterval(updateClock, 1000)
+
       if (window.chrome && chrome.runtime && chrome.runtime.onMessage) {
         chrome.runtime.onMessage.addListener((message) => {
           if (message.type === 'STATE_UPDATE' && message.state) {
             Object.assign(timerStore, message.state)
+            Object.assign(authStore, message.state)
           }
         })
       }
+
       request('GET_INITIAL_STATE')
     })
 
     return {
+      authStore,
       timerStore,
       currentDate,
       currentTime,
       newTaskName,
       handleAddTask,
       handleEditTask,
-      showManualTaskModal,
-      manualTask,
-      manualEntryMode,
-      handleManualTaskConfirm,
-      showSetTimeModal,
-      setTimeInputValue,
-      handleSetTimeClick,
-      handleSetTimeConfirm,
-      formatTime,
-      formatCreationDate,
       handleToggleTask,
       handleDeleteTask,
       handleCompleteTask,
       handleToggleMainTimer,
+      handleSetTimeClick,
+      handleSetTimeConfirm,
+      handleManualTaskConfirm,
+      handleLogin,
+      handleLogout,
+      toggleProfileMenu,
+      isProfileMenuOpen,
+      manualTask,
+      manualEntryMode,
+      showManualTaskModal,
+      showSetTimeModal,
+      setTimeInputValue,
+      formatTime,
+      formatCreationDate,
     }
   },
 }

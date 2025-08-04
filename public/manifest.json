@@ -1,17 +1,33 @@
 {
   "manifest_version": 3,
   "name": "NeoChronos - Focus Timer",
-  "version": "1.1.0",
+  "version": "2.1.0",
   "description": "Gerencie seu dia de trabalho e tarefas com um cronômetro neomórfico.",
-  "permissions": [
-    "storage"
-  ],
+  "permissions": ["storage", "identity"],
   "action": {
     "default_popup": "index.html",
-    "default_title": "NeoChronos"
+    "default_title": "NeoChronos",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png"
+    }
   },
   "background": {
     "service_worker": "assets/service-worker.js",
     "type": "module"
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "oauth2": {
+    "client_id": "847614985554-omccapcpedqgin975a9h559m265ir6nf.apps.googleusercontent.com",
+    "scopes": [
+      "https://www.googleapis.com/auth/userinfo.email",
+      "https://www.googleapis.com/auth/userinfo.profile"
+    ]
   }
 }

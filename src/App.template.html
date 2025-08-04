@@ -1,4 +1,37 @@
 <div class="container">
+    <div class="top-bar">
+        <div class="logo">
+            <!-- Usaremos um ícone do manifest como logo -->
+            <img src="/icons/icon32.png" alt="NeoChronos Logo" class="logo-icon">
+            <span class="logo-text">NeoChronos</span>
+        </div>
+        <div class="user-profile">
+            <!-- Se o utilizador NÃO estiver logado, mostra o botão de Login -->
+            <button v-if="!authStore.isLoggedIn" @click="handleLogin" class="neumorphic-button-outset login-btn">
+                <i class="bi bi-google"></i>
+                <span>Login</span>
+            </button>
+
+            <!-- Se o utilizador ESTIVER logado, mostra a foto e um menu dropdown -->
+            <div v-if="authStore.isLoggedIn && authStore.user" class="profile-area" @click="toggleProfileMenu">
+                <img :src="authStore.user.photoURL" :alt="authStore.user.displayName" class="profile-picture">
+
+                <!-- Menu Dropdown -->
+                <div v-if="isProfileMenuOpen" class="profile-menu">
+                    <div class="menu-user-info">
+                        <strong>{{ authStore.user.displayName }}</strong>
+                        <span>{{ authStore.user.email }}</span>
+                    </div>
+                    <hr>
+                    <a href="#" @click.prevent="handleLogout" class="menu-item">
+                        <i class="bi bi-box-arrow-right"></i>
+                        <span>Logout</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <header class="main-header">
         <div class="datetime-display header-card">
             <div>{{ currentTime }}</div>

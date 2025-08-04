@@ -1,63 +1,63 @@
-import { createPinia } from 'pinia';
-import { useTimerStore } from './stores/timerStore';
+// src/service-worker.js
 
-const pinia = createPinia();
-const timerStore = useTimerStore(pinia);
+import { createPinia } from 'pinia'
+import { useTimerStore } from './stores/timerStore'
+import { useAuthStore } from './stores/authStore'
 
-timerStore.initialize();
-console.log("Service Worker ativo e store Pinia carregada.");
+const pinia = createPinia()
+
+const timerStore = useTimerStore(pinia)
+const authStore = useAuthStore(pinia)
+
+timerStore.initialize()
+authStore.listenForAuthStateChanges()
+
+console.log('Service Worker ativo. Stores de Timer e Auth carregadas.')
 
 function broadcastState() {
   const currentState = {
     ...timerStore.$state,
     formattedMainTime: timerStore.formattedMainTime,
     formattedCompletedTasksTotal: timerStore.formattedCompletedTasksTotal,
-    todaysTasks: timerStore.todaysTasks
-  };
-  chrome.runtime.sendMessage({ type: 'STATE_UPDATE', state: currentState });
+    todaysTasks: timerStore.todaysTasks,
+    user: authStore.user,
+    isLoggedIn: authStore.isLoggedIn,
+  }
+  chrome.runtime.sendMessage({ type: 'STATE_UPDATE', state: currentState })
 }
 
-// OUVINTE DE MENSAGENS
+// OUVINTE DE MENSAGENS REATORIZADO E SIMPLIFICADO
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    const { action, payload } = message;
+  const { action, payload } = message
 
-    switch (action) {
-        case 'GET_INITIAL_STATE':
-            // Não faz nada aqui, apenas transmite o estado no final
-            break;
-        case 'toggleMainTimer':
-            timerStore.toggleMainTimer();
-            break;
-        case 'setMainTimerManually':
-            timerStore.setMainTimerManually(payload.hours, payload.minutes);
-            break;
-        case 'addTask':
-            timerStore.addTask(payload.name); 
-            break;
-        case 'addManualTask':
-            timerStore.addManualTask(payload); 
-            break;
-        case 'toggleTask':
-            timerStore.toggleTask(payload.id); 
-            break;
-        case 'deleteTask':
-            timerStore.deleteTask(payload.id); 
-            break;
-        case 'completeTask':
-            timerStore.completeTask(payload.id); 
-            break;
-        case 'updateTaskName':
-            timerStore.updateTaskName(payload);
-            break;
-        default:
-            console.warn(`Ação desconhecida recebida: '${action}'`);
-    }
+  console.log(message)
+  if (action === 'GET_INITIAL_STATE') {
+    // Apenas transmite o estado no final
+  }
+  // Verifica se a ação existe na timerStore e executa-a
+  else if (typeof timerStore[action] === 'function') {
+    console.log(`Action '${action}' recebida com payload:`, payload)
+    timerStore[action](payload)
+  }
+  // Se não, verifica se a ação existe na authStore e executa-a
+  else if (typeof authStore[action] === 'function') {
+    console.log(`Action '${action}' recebida com payload:`, payload)
+    authStore[action](payload)
+  }
+  // Se não for encontrada em nenhuma store
+  else {
+    console.warn(`Ação desconhecida recebida: '${action}'`)
+  }
 
-    broadcastState();
-});
+  broadcastState()
+})
 
 setInterval(() => {
-    if (timerStore.mainTimer.isRunning || timerStore.tasks.some(t => t.status === 'running')) {
-        broadcastState();
-    }
-}, 1000);
+  if (timerStore.mainTimer.isRunning || timerStore.tasks.some((t) => t.status === 'running')) {
+    broadcastState()
+  }
+}, 1000)
+
+authStore.$subscribe(() => {
+  broadcastState()
+})
